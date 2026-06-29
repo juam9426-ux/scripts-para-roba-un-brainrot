@@ -442,7 +442,6 @@ body::after {
   </div>
 
   <div class="scripts-grid" id="scriptsGrid"></div>
-  <div class="loading-state" id="loadingState">Cargando scripts...</div>
   <div class="empty-state" id="emptyState">— No hay scripts disponibles —</div>
 
   <footer class="footer">
@@ -499,44 +498,25 @@ body::after {
 <script>
 const PIN = '282010';
 
-// ---------- ALMACENAMIENTO COMPARTIDO (JSONBin.io) ----------
-const BIN_ID = '6a42d82ca8b6024c7625a773';
-const API_KEY = '$2a$10$UT9taCrC26n/FQMBzgRuA.WC4NEMg0lS3gEk78WsXM4TGVtc3Evoy';
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+// =====================================================================
+// 👇 AQUÍ AGREGAS TUS SCRIPTS — edita esta lista directamente 👇
+// Copia el formato de las líneas y agrega las tuyas.
+// nombre = el nombre que se va a mostrar
+// link   = el link RAW de tu script
+// =====================================================================
+let scripts = [
+  { nombre: "Envy Hub", link: "loadstring(game:HttpGet('https://pastefy.app/F3FfXXr3/raw'))()" },
+  { nombre: "PVP Hub", link: "loadstring(game:HttpGet('https://pastefy.app/O3T1VDy4/raw'))()" },
+  { nombre: "Auto TP", link: "loadstring(game:HttpGet('https://pastefy.app/eD286oPt/raw'))()" },
+  { nombre: "Flast TP", link: "loadstring(game:HttpGet('https://orrxl4-protector.com/api/raw?id=0tnr8m9r'))()" },
+  { nombre: "Trade Visual", link: "loadstring(game:HttpGet('https://pastefy.app/wGI1VZLm/raw'))()" },
+];
+// =====================================================================
+// 👆 NO TOQUES NADA DEBAJO DE ESTA LÍNEA 👆
+// =====================================================================
 
 let clickCount = 0;
 let clickTimer = null;
-let scripts = [];
-
-async function cargarScripts() {
-  try {
-    const res = await fetch(`${BIN_URL}/latest`, {
-      headers: { 'X-Master-Key': API_KEY }
-    });
-    const data = await res.json();
-    scripts = (data.record && data.record.scripts) ? data.record.scripts : [];
-  } catch (e) {
-    console.error(e);
-    scripts = [];
-  }
-}
-
-async function guardarScripts() {
-  try {
-    const res = await fetch(BIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': API_KEY
-      },
-      body: JSON.stringify({ scripts })
-    });
-    if (!res.ok) throw new Error('Fallo al guardar');
-  } catch (e) {
-    showToast('Error al guardar (revisa tu conexión)');
-    console.error(e);
-  }
-}
 
 // ---------- TRIGGER SECRETO ----------
 document.getElementById('secretTrigger').addEventListener('click', function() {
@@ -583,55 +563,42 @@ async function agregarScript() {
   const orden = parseInt(document.getElementById('aOrden').value) || scripts.length + 1;
   if (!nombre || !link) { showToast('Pon nombre y link'); return; }
 
-  const btn = document.getElementById('btnAgregar');
-  btn.disabled = true;
-  btn.textContent = 'Guardando...';
-
   scripts.push({ nombre, link, orden });
   scripts.sort((a, b) => a.orden - b.orden);
-  await guardarScripts();
 
   document.getElementById('aNombre').value = '';
   document.getElementById('aLink').value = '';
   document.getElementById('aOrden').value = scripts.length + 1;
   renderAdminList();
   renderScripts();
-  showToast('Script agregado para todos');
-
-  btn.disabled = false;
-  btn.textContent = '＋ Agregar Script';
+  showToast('Agregado (solo en esta visita — para que quede fijo, cópialo en el código)');
 }
 
-async function eliminarScript(i) {
+function eliminarScript(i) {
   scripts.splice(i, 1);
-  await guardarScripts();
   renderAdminList();
   renderScripts();
 }
 
-async function moverScript(i, dir) {
+function moverScript(i, dir) {
   const j = i + dir;
   if (j < 0 || j >= scripts.length) return;
   [scripts[i], scripts[j]] = [scripts[j], scripts[i]];
   scripts.forEach((s, idx) => s.orden = idx + 1);
-  await guardarScripts();
   renderAdminList();
   renderScripts();
 }
 
-async function limpiarTodo() {
+function limpiarTodo() {
   scripts = [];
-  await guardarScripts();
   renderAdminList();
   renderScripts();
-  showToast('Scripts eliminados');
+  showToast('Scripts eliminados (solo en esta visita)');
 }
 
 function renderScripts() {
   const grid = document.getElementById('scriptsGrid');
   const empty = document.getElementById('emptyState');
-  const loading = document.getElementById('loadingState');
-  loading.style.display = 'none';
   grid.innerHTML = '';
   if (scripts.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
@@ -676,27 +643,8 @@ function renderAdminList() {
 
 function generarScript(i) {
   const s = scripts[i];
-  const code =
-`local function run(url)
-    task.spawn(function()
-        local ok, src = pcall(function()
-            return game:HttpGet(url)
-        end)
-        if ok and src then
-            local f, err = loadstring(src)
-            if f then
-                pcall(f)
-            else
-                warn(err)
-            end
-        else
-            warn("No se pudo obtener: "..url)
-        end
-    end)
-end
-run("${s.link}")`;
   document.getElementById('genTitle').textContent = s.nombre;
-  document.getElementById('generatedBox').textContent = code;
+  document.getElementById('generatedBox').textContent = s.link;
   document.getElementById('generatedBox').style.display = 'block';
   document.getElementById('genOverlay').classList.add('open');
 }
@@ -721,11 +669,8 @@ document.getElementById('genOverlay').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('open');
 });
 
-// Inicializar: cargar scripts compartidos al abrir la página
-(async function init() {
-  await cargarScripts();
-  renderScripts();
-})();
+// Inicializar: la lista ya viene escrita arriba en el código
+renderScripts();
 </script>
 </body>
 </html>
