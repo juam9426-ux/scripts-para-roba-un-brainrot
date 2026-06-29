@@ -498,26 +498,40 @@ body::after {
 
 <script>
 const PIN = '282010';
-const STORAGE_KEY = 'umbrine_scripts_list'; // clave compartida: todos los visitantes leen la misma
+
+// ---------- ALMACENAMIENTO COMPARTIDO (JSONBin.io) ----------
+const BIN_ID = '6a42d82ca8b6024c7625a773';
+const API_KEY = '$2a$10$UT9taCrC26n/FQMBzgRuA.WC4NEMg0lS3gEk78WsXM4TGVtc3Evoy';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
 let clickCount = 0;
 let clickTimer = null;
 let scripts = [];
 
-// ---------- ALMACENAMIENTO COMPARTIDO ----------
-// shared = true => visible para CUALQUIER visitante de la página (no solo tú)
 async function cargarScripts() {
   try {
-    const result = await window.storage.get(STORAGE_KEY, true);
-    scripts = result ? JSON.parse(result.value) : [];
+    const res = await fetch(`${BIN_URL}/latest`, {
+      headers: { 'X-Master-Key': API_KEY }
+    });
+    const data = await res.json();
+    scripts = (data.record && data.record.scripts) ? data.record.scripts : [];
   } catch (e) {
-    // si la clave no existe todavía, no hay scripts
+    console.error(e);
     scripts = [];
   }
 }
 
 async function guardarScripts() {
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(scripts), true);
+    const res = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify({ scripts })
+    });
+    if (!res.ok) throw new Error('Fallo al guardar');
   } catch (e) {
     showToast('Error al guardar (revisa tu conexión)');
     console.error(e);
