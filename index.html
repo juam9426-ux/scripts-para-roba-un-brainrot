@@ -641,7 +641,7 @@ function renderScripts() {
     card.innerHTML = `
       <div class="script-number">#${String(i+1).padStart(2,'0')}</div>
       <div class="script-name">${s.nombre}</div>
-      <div class="script-link">${s.link}</div>
+      <div class="script-link">${'•'.repeat(Math.min(s.link.length, 24))}</div>
       <button class="script-btn" onclick="generarScript(${i})">⚡ Generar Script</button>
     `;
     grid.appendChild(card);
